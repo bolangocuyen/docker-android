@@ -98,7 +98,7 @@ RUN curl -sS https://dl.google.com/android/repository/${SDK_VERSION} -o /tmp/sdk
         "cmake;$CMAKE_VERSION" \
         "ndk;$NDK_VERSION" \
     && rm -rf ${ANDROID_HOME}/.android \
-    && chmod 777 -R /opt/android
+    && chmod 777 -R /system
 
 # Pre-download React Native native C++ dependencies so Gradle skips downloading them at build time
 RUN mkdir -p /opt/react-native-downloads \
