@@ -31,7 +31,7 @@ ENV PATH=${CMAKE_BIN_PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HO
 ENV LC_ALL=C.UTF8
 
 # Install system dependencies
-RUN sudo apt update -qq && apt install -qq -y --no-install-recommends \
+RUN apt update -qq && apt install -qq -y --no-install-recommends \
         apt-transport-https \
         bc \
         bison \
