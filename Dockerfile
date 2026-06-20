@@ -29,7 +29,6 @@ ENV PATH=${CMAKE_BIN_PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HO
 # Set the encoding to resolve a known character encoding issue with decompressing tar.gz files in containers
 # via Gradle: https://github.com/gradle/gradle/issues/23391#issuecomment-1878979127
 ENV LC_ALL=C.UTF8
-RUN apt install sudo
 
 # Install system dependencies
 RUN sudo apt update -qq && apt install -qq -y --no-install-recommends \
