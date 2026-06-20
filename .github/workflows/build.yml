@@ -20,7 +20,7 @@ jobs:
         run: git clone https://github.com/facebook/react-native.git
       - name: Build React Native
         run: |
-          docker run --rm --ulimit nofile=10240 -v "$(pwd)/scripts/":/scripts -v "$(pwd)/react-native/":/react-native -w /react-native react-native-community/react-native /bin/sh -c "/scripts/test-react-native-setup.sh"
+          docker run --rm --ulimit nofile=10240 -v "$(pwd)/scripts/":/scripts -v "$(pwd)/react-native/":/react-native -w /react-native bolangocuyen/docker-android /bin/sh -c "/scripts/test-react-native-setup.sh"
 
   build-fantom:
     runs-on: ubuntu-22.04
