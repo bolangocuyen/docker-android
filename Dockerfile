@@ -11,6 +11,7 @@ ARG SDK_VERSION=commandlinetools-linux-14742923_latest.zip
 # (the new <api>.<minor> scheme, cf. android-36.1); plain "android-37" does not exist.
 ARG ANDROID_BUILD_VERSION=37.0
 ARG ANDROID_TOOLS_VERSION=37.0.0
+ARG CLANG_VERSION=clang-r596125
 ARG NDK_VERSION=27.3.13750724
 ARG NODE_VERSION=24.17.0
 ARG WATCHMAN_VERSION=4.9.0
@@ -24,7 +25,7 @@ ENV ANDROID_NDK_HOME=${ANDROID_HOME}
 
 ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ENV CMAKE_BIN_PATH=${ANDROID_HOME}/cmake/$CMAKE_VERSION/bin
-ENV PATH=${CMAKE_BIN_PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${PATH}
+ENV PATH=${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${CMAKE_BIN_PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/emulator:${ANDROID_HOME}/platform-tools:${PATH}
 
 # Set the encoding to resolve a known character encoding issue with decompressing tar.gz files in containers
 # via Gradle: https://github.com/gradle/gradle/issues/23391#issuecomment-1878979127
@@ -97,9 +98,18 @@ RUN curl -sS https://dl.google.com/android/repository/${SDK_VERSION} -o /tmp/sdk
         "build-tools;$ANDROID_TOOLS_VERSION" \
         "cmake;$CMAKE_VERSION" \
         "ndk;$NDK_VERSION" \
+    && mv ${ANDROID_HOME}/ndk/${NDK_VERSION}/* ${ANDROID_HOME}/ \
+    && rm -rf ${ANDROID_HOME}/ndk \
+    && rm -rf ${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64/* \ 
+    && git clone --depth 1 --filter=blob:none --sparse https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 /tmp/clang-repo \
+    && cd /tmp/clang-repo \
+    && git sparse-checkout set ${CLANG_VERSION} \
+    && mv ${CLANG_VERSION}/* ${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64/ \
+    && cd / \
+    && rm -rf /tmp/clang-repo \
+    # Cleanup
     && rm -rf ${ANDROID_HOME}/.android \
     && chmod 777 -R /system
-
 # Pre-download React Native native C++ dependencies so Gradle skips downloading them at build time
 RUN mkdir -p /opt/react-native-downloads \
     && curl -sL -o /opt/react-native-downloads/boost_1_83_0.tar.gz https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz \
