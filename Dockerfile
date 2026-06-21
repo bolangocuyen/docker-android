@@ -13,6 +13,7 @@ ARG ANDROID_BUILD_VERSION=37.0
 ARG ANDROID_TOOLS_VERSION=37.0.0
 ARG CLANG_VERSION=clang-r596125
 ARG NDK_VERSION=27.3.13750724
+ARG NDK_RELEASE_TAG=r27
 ARG NODE_VERSION=24.17.0
 ARG WATCHMAN_VERSION=4.9.0
 ARG CMAKE_VERSION=3.22.1
@@ -100,13 +101,25 @@ RUN curl -sS https://dl.google.com/android/repository/${SDK_VERSION} -o /tmp/sdk
         "ndk;$NDK_VERSION" \
     && mv ${ANDROID_HOME}/ndk/${NDK_VERSION}/* ${ANDROID_HOME}/ \
     && rm -rf ${ANDROID_HOME}/ndk \
-    && rm -rf ${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64/* \ 
+    && rm -rf ${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64/* \
     && git clone --depth 1 --filter=blob:none --sparse https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 /tmp/clang-repo \
     && cd /tmp/clang-repo \
     && git sparse-checkout set ${CLANG_VERSION} \
     && mv ${CLANG_VERSION}/* ${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64/ \
     && cd / \
     && rm -rf /tmp/clang-repo \
+    && cd ${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin \
+    && for arch in aarch64-linux-android armv7a-linux-androideabi i686-linux-android x86_64-linux-android; do \
+         for api in $(seq 21 35); do \
+           for suffix in clang clang++; do \
+             printf '#!/usr/bin/env bash\nbin_dir=$(dirname "$0")\nif [ "$1" != "-cc1" ]; then\n    "$bin_dir/%s" --target=%s%s "$@"\nelse\n    # Target is already an argument.\n    "$bin_dir/%s" "$@"\nfi\n' \
+               "${suffix}" "${arch}" "${api}" "${suffix}" \
+               > "${arch}${api}-${suffix}"; \
+             chmod +x "${arch}${api}-${suffix}"; \
+           done; \
+         done; \
+       done \
+    && cd / \
     # Cleanup
     && rm -rf ${ANDROID_HOME}/.android \
     && chmod 777 -R /system
