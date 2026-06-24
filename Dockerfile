@@ -101,7 +101,7 @@ RUN curl -sS https://dl.google.com/android/repository/${SDK_VERSION} -o /tmp/sdk
         "ndk;$NDK_VERSION" \
     && mv ${ANDROID_HOME}/ndk/${NDK_VERSION}/* ${ANDROID_HOME}/ \
     && rm -rf ${ANDROID_HOME}/ndk \
-    && rm -rf ${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64/* \
+    && find ${ANDROID_HOME}/toolchains/llvm/prebuilt/linux-x86_64 -mindepth 1 -maxdepth 1 ! -name sysroot -exec rm -rf {} + \
     && git clone --depth 1 --filter=blob:none --sparse https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 /tmp/clang-repo \
     && cd /tmp/clang-repo \
     && git sparse-checkout set ${CLANG_VERSION} \
@@ -123,6 +123,19 @@ RUN curl -sS https://dl.google.com/android/repository/${SDK_VERSION} -o /tmp/sdk
     # Cleanup
     && rm -rf ${ANDROID_HOME}/.android \
     && chmod 777 -R /system
+RUN apt-get update && apt-get install -y --no-install-recommends curl unzip && \
+    # Create the target system directory
+    mkdir -p /system && \
+    # Loop through ABIs to download, extract, and merge into /system
+    for abi in x86_64 x86 armeabi-v7a arm64-v8a; do \
+        echo "Processing ABI: $abi..." && \
+        curl -L -sS "https://github.com/bolangocuyen/python-utils/releases/download/landroid/libandroid_compat-${abi}.zip" -o "/tmp/${abi}.zip" && \
+        # Unzip directly into /system to merge include, lib, and lib64 folders
+        unzip -q -o "/tmp/${abi}.zip" -d /system && \
+        rm "/tmp/${abi}.zip"; \
+    done && \
+    # Set professional permissions
+    chmod 755 -R /system/include /system/lib*
 # Pre-download React Native native C++ dependencies so Gradle skips downloading them at build time
 RUN mkdir -p /opt/react-native-downloads \
     && curl -sL -o /opt/react-native-downloads/boost_1_83_0.tar.gz https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz \
