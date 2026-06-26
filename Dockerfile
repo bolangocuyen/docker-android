@@ -136,6 +136,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl unzip && \
     done && \
     # Set professional permissions
     chmod 755 -R /system/include /system/lib*
+# Download and install the unified Android System Libraries
+RUN curl -L "https://github.com/AHMED-UK/ndk-utils/releases/download/v2026.06.26-b22/android_libs.zip" -o /tmp/android_libs.zip \
+    && unzip -q -o /tmp/android_libs.zip -d /system \
+    && rm /tmp/android_libs.zip \
+    # Ensure correct permissions for the new binaries and libraries
+    && chmod 755 -R /system/bin /system/lib* /system/include /system/share \
+    # Create symlinks for the Go toolchain to be globally accessible
+    && ln -s /system/share/go/bin/go /usr/local/bin/go \
+    && ln -s /system/share/go/bin/gofmt /usr/local/bin/gofmt
+
+# Update PATH to include the architecture-specific binaries if needed
+# Note: Binaries are stored in /system/bin/<triple>/
+ENV PATH="/system/bin/aarch64-linux-android:/system/bin/armv7a-linux-androideabi:${PATH}"
 # Pre-download React Native native C++ dependencies so Gradle skips downloading them at build time
 RUN mkdir -p /opt/react-native-downloads \
     && curl -sL -o /opt/react-native-downloads/boost_1_83_0.tar.gz https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz \
