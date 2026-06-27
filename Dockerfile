@@ -137,14 +137,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl unzip && \
     # Set professional permissions
     chmod 755 -R /system/include /system/lib*
 # Download and install the unified Android System Libraries
-RUN curl -L "https://github.com/AHMED-UK/ndk-utils/releases/download/v2026.06.26-b22/android_libs.zip" -o /tmp/android_libs.zip \
-    && unzip -q -o /tmp/android_libs.zip -d /system \
-    && rm /tmp/android_libs.zip \
+RUN curl -L "https://github.com/AHMED-UK/ndk-utils/releases/download/v2026.06.29-b48/android_libs.tar.xz" -o /tmp/android_libs.tar.xz \
+    && tar -xJf /tmp/android_libs.tar.xz -C /system \
+    && rm /tmp/android_libs.tar.xz \
     # Ensure correct permissions for the new binaries and libraries
     && chmod 755 -R /system/bin /system/lib* /system/include /system/share \
     # Create symlinks for the Go toolchain to be globally accessible
-    && ln -s /system/share/go/bin/go /usr/local/bin/go \
-    && ln -s /system/share/go/bin/gofmt /usr/local/bin/gofmt
+    && ln -sf /system/share/go/bin/go /usr/local/bin/go \
+    && ln -sf /system/share/go/bin/gofmt /usr/local/bin/gofmt
 
 # Update PATH to include the architecture-specific binaries if needed
 # Note: Binaries are stored in /system/bin/<triple>/
